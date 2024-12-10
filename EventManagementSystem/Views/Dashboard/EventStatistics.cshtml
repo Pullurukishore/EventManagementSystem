@@ -1,0 +1,196 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Event Statistics</title>
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7fc;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            background-color: #333;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding-top: 20px;
+            color: white;
+            padding-left: 20px;
+        }
+
+            .sidebar a {
+                color: white;
+                padding: 10px 15px;
+                text-decoration: none;
+                display: block;
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+
+                .sidebar a:hover {
+                    background-color: #575757;
+                    border-radius: 5px;
+                }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #1e1e1e;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .card {
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .stat-title {
+            font-size: 18px;
+            color: #777;
+        }
+
+        .stat {
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-refresh {
+            background-color: #3b76f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+            .btn-refresh:hover {
+                background-color: #2c5ecf;
+            }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Admin Panel</h2>
+        <a href="#">Dashboard</a>
+        <a href="#">Event Statistics</a>
+        <a href="#">User Management</a>
+        <a href="#">Settings</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1>Event Statistics</h1>
+        </div>
+
+        <div class="card">
+            <h3>Event Overview</h3>
+            <div class="stat-title">Total Events: <span class="stat" id="totalEvents">0</span></div>
+            <div class="stat-title">Average Bookings: <span class="stat" id="avgBookings">0</span></div>
+        </div>
+
+        <div class="card chart-container">
+            <canvas id="eventChart" width="400" height="200"></canvas>
+        </div>
+
+        <button class="btn-refresh" onclick="refreshChart()">Refresh Data</button>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Initial chart data fetch
+            fetchDataAndUpdateChart();
+
+            // Function to fetch data and update the chart
+            function fetchDataAndUpdateChart() {
+                $.getJSON('/Dashboard/EventStatistics', function (data) {
+                    if (data.length === 0) {
+                        alert("No data available.");
+                        return;
+                    }
+
+                    // Process the data
+                    var labels = data.map(x => x.eventName);
+                    var counts = data.map(x => x.count);
+                    var avgBookings = data.map(x => x.avgBookings);
+
+                    // Update statistics
+                    $('#totalEvents').text(data.length);
+                    $('#avgBookings').text((avgBookings.reduce((a, b) => a + b, 0) / avgBookings.length).toFixed(2));
+
+                    // Create the chart
+                    var ctx = document.getElementById('eventChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Number of Bookings',
+                                    data: counts,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Average Bookings',
+                                    data: avgBookings,
+                                    backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                                    borderColor: 'rgba(255, 159, 64, 1)',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            // Function to refresh the chart with updated data
+            window.refreshChart = function () {
+                fetchDataAndUpdateChart();
+            };
+        });
+    </script>
+
+</body>
+</html>

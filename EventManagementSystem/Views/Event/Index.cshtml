@@ -1,0 +1,59 @@
+﻿@model IEnumerable<EventManagementSystem.Models.Event>
+
+<h2 class="mt-4">Event List</h2>
+<link rel="stylesheet" href="/css/custom.css">
+<link rel="stylesheet" href="/assets/css/custom.css">
+
+@if (Model != null && Model.Any())
+{
+    <div class="row">
+        @foreach (var @ev in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@ev.EventName</h5>
+                        <p class="card-text">@ev.Description</p>
+                        <p class="card-text"><strong>Date:</strong> @ev.EventDate.ToString("D", System.Globalization.CultureInfo.CurrentCulture)</p>
+                        <p class="card-text"><strong>Location:</strong> @ev.Location</p>
+                        <button class="btn btn-primary btn-book" data-event-id="@ev.EventId">Book Now</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p>No events found.</p>
+}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Include jQuery if not already included -->
+<script>
+    $(document).on('click', '.btn-book', function () {
+        var eventId = $(this).data('event-id');  // Get the EventId from the button
+        var button = $(this);
+        button.prop('disabled', true).text('Processing...');  // Disable button and show 'Processing...'
+
+        // Send the request as JSON to the BookEvent action
+        $.ajax({
+            url: '/Booking/BookEvent',  // The correct URL for the action
+            type: 'POST',
+            contentType: 'application/json',  // Set content type to JSON
+            data: JSON.stringify({ eventId: eventId }), // Send the eventId as JSON
+            success: function (response) {
+                if (response.success) {
+                    alert(response.message);  // Show success message
+                    button.prop('disabled', true).text('Booked');  // Disable button and update text
+                } else {
+                    alert('Booking failed: ' + response.message);  // Show failure message
+                    button.prop('disabled', false).text('Book Now');  // Re-enable the button
+                }
+            },
+            error: function (xhr, status, error) {
+                alert('An error occurred: ' + error);  // Show error message if request fails
+                button.prop('disabled', false).text('Book Now');  // Re-enable the button
+            }
+        });
+    });
+</script>
